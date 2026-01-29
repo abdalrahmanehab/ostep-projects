@@ -16,7 +16,7 @@ Node *head = NULL;
 Node *createNode(int key, char *value);
 void put(int key, char *value);
 char *get(int key);
-void delete_key(int key);
+int delete_key(int key);
 void clear();
 void print_all();
 
@@ -61,10 +61,10 @@ char *get(int key)
 }
 
 // Remove a key-value pair from storage
-void delete_key(int key)
+int delete_key(int key)
 {
     if (head == NULL)
-        return;
+        return 0;
     // case 1 delete the head
     if (head->key == key)
     {
@@ -73,7 +73,7 @@ void delete_key(int key)
         head = head->next;
         free(temp->value); // Free the string first as it is also a pointer
         free(temp);
-        return;
+        return 1;
     }
 
     // Case 2: Delete middle or last node
@@ -89,11 +89,13 @@ void delete_key(int key)
             current->next = temp->next;
             free(temp->value);
             free(temp);
-            return;
+            return 1;
         }
 
         current = current->next;
     }
+
+    return 0;
 }
 
 // remove all
@@ -124,9 +126,47 @@ void print_all()
     }
 }
 
+void save_database()
+{
+    FILE *fp = fopen("database.txt", "w");
+
+    if (fp == NULL)
+        return;
+    Node *current = head;
+    while (current != NULL)
+    {
+        fprintf(fp, "%d,%s\n", current->key, current->value);
+        current = current->next;
+    }
+
+    fclose(fp);
+}
+
+void load_database()
+{
+    FILE *fp = fopen("database.txt", "r");
+    if (fp == NULL)
+        return;
+
+    char line[256];
+    while (fgets(line, sizeof(line), fp) != NULL)
+    {
+        line[strcspn(line, "\n")] = '\0';
+
+        char *key_s = strtok(line, ",");
+        char *value = strtok(NULL, ",");
+
+        if (key_s && value)
+        {
+            int key = atoi(key_s);
+            put(key, value);
+        }
+    }
+    fclose(fp);
+}
 int main(int argc, char *argv[])
 {
-
+    load_database();
     for (int i = 1; i < argc; i++)
     {
 
@@ -161,7 +201,7 @@ int main(int argc, char *argv[])
                     char *str = get(key);
                     if (str == NULL)
                     {
-                        printf("key not found !\n");
+                        printf("%d not found\n", key);
                     }
                     else
                     {
@@ -170,11 +210,19 @@ int main(int argc, char *argv[])
                 }
                 else if (strcmp(cmd, "d") == 0)
                 {
-                    delete_key(key);
+                    if (!delete_key(key))
+                    {
+                        printf("%d not found\n", key);
+                    }
+                }
+                else
+                {
+                    printf("bad command\n");
                 }
             }
         }
     }
 
+    save_database();
     return 0;
 }
