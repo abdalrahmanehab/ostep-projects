@@ -205,7 +205,7 @@ int main(int argc, char *argv[])
                     }
                     else
                     {
-                        printf("%s\n", str);
+                        printf("%d,%s\n", key, str);
                     }
                 }
                 else if (strcmp(cmd, "d") == 0)
