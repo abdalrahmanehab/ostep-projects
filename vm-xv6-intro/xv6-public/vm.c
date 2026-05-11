@@ -392,3 +392,50 @@ copyout(pde_t *pgdir, uint va, void *p, uint len)
 //PAGEBREAK!
 // Blank page.
 
+int
+mprotect(pde_t *pgdir, void *addr, int len)
+{
+  pte_t *pte;
+  uint a = (uint)addr;
+  uint end = a + len * PGSIZE;
+
+  if(a % PGSIZE != 0)
+    return -1;
+  
+  if(len <= 0)
+    return -1;
+
+  for(; a < end; a += PGSIZE) {
+    pte = walkpgdir(pgdir, (void*)a, 0);
+    if(pte == 0 || !(*pte & PTE_P) || !(*pte & PTE_U))
+      return -1;
+    *pte &= ~PTE_W;
+  }
+  
+  lcr3(V2P(pgdir));
+  return 0;
+}
+
+int
+munprotect(pde_t *pgdir, void *addr, int len)
+{
+  pte_t *pte;
+  uint a = (uint)addr;
+  uint end = a + len * PGSIZE;
+
+  if(a % PGSIZE != 0)
+    return -1;
+  
+  if(len <= 0)
+    return -1;
+
+  for(; a < end; a += PGSIZE) {
+    pte = walkpgdir(pgdir, (void*)a, 0);
+    if(pte == 0 || !(*pte & PTE_P) || !(*pte & PTE_U))
+      return -1;
+    *pte |= PTE_W;
+  }
+  
+  lcr3(V2P(pgdir));
+  return 0;
+}

@@ -89,3 +89,30 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+
+int
+sys_mprotect(void)
+{
+  void *addr;
+  int len;
+  if(argptr(0, (char**)&addr, sizeof(void*)) < 0)
+    return -1;
+  if(argint(1, &len) < 0)
+    return -1;
+
+  // it goes to the main mprotect in vm.c
+  return mprotect(myproc()->pgdir, addr, len);
+}
+
+int
+sys_munprotect(void)
+{
+  void *addr;
+  int len;
+  if(argptr(0, (char**)&addr, sizeof(void*)) < 0)
+    return -1;
+  if(argint(1, &len) < 0)
+    return -1;
+  return munprotect(myproc()->pgdir, addr, len);
+}
